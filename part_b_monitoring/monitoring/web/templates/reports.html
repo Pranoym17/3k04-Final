@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block body %}
+<h2>Reports</h2>
+{% if permits(Fn.RUN_INVENTORY_REPORT) %}
+<section>
+<h3>Inventory report</h3>
+<p>Every Low slot across all cabinets. Pharmacists only. Rows from an Offline or Reconnecting cabinet are labelled Stale.</p>
+<p><a class="button" href="{{ url_for('report_inventory') }}">Run inventory report</a></p>
+</section>
+{% endif %}
+{% if permits(Fn.RUN_ALARM_AVAIL_REPORTS) %}
+<section>
+<h3>Alarm and availability reports</h3>
+<p>Pharmacists and technicians. Empty dates mean the last 24 hours.</p>
+<form method="get" action="{{ url_for('report_alarms') }}" class="row">
+  <label for="a_adc">ADC</label>
+  <select id="a_adc" name="adc_id"><option value="">All ADCs</option>{% for a in adc_ids %}<option>{{ a }}</option>{% endfor %}</select>
+  <label for="a_start">From</label><input id="a_start" name="start" type="datetime-local">
+  <label for="a_end">To</label><input id="a_end" name="end" type="datetime-local">
+  <button type="submit">Run alarm report</button>
+</form>
+<form method="get" action="{{ url_for('report_availability') }}" class="row">
+  <label for="v_start">From</label><input id="v_start" name="start" type="datetime-local">
+  <label for="v_end">To</label><input id="v_end" name="end" type="datetime-local">
+  <button type="submit">Run availability report</button>
+</form>
+</section>
+{% endif %}
+{% endblock %}

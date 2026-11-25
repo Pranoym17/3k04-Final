@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block body_class %}{{ 'demo-dashboard' if demo else '' }}{% endblock %}
+{% block body %}
+<div class="page-heading">
+  <div><p class="eyebrow">Monitoring workspace</p><h2>Dashboard</h2><p>Cabinet connections, inventory and alarms at a glance.</p></div>
+  <div class="heading-actions">
+    <span class="section-tag">{{ sys_mode }} mode</span>
+    {% if demo %}
+    <a class="button simulator-button" href="{{ config.ADC_SIMULATOR_URL }}" target="_blank" rel="noopener noreferrer">ADC simulator <span aria-hidden="true">&nearr;</span><span class="sr"> (opens in a new tab)</span></a>
+    {% endif %}
+  </div>
+</div>
+{% if demo %}
+<details class="demo-guide">
+  <summary>Quick demo guide <span class="hint">Scenarios, roles and timers</span></summary>
+  <div class="demo-guide-body">
+    <ol>
+      <li><strong>Open the ADC simulator</strong> in a separate tab or window. Keep this dashboard open to watch updates.</li>
+      <li><strong>Show inventory:</strong> set slot 3 to quantity 4 in the simulator. Open the cabinet ID below to see its slots and send a threshold change as a pharmacist.</li>
+      <li><strong>Show alarms:</strong> Raise alarm, wait for Escalated, then Acknowledge here as a pharmacist or technician. Clear last alarm in the simulator.</li>
+      <li><strong>Show recovery:</strong> Silence (link down) makes a cabinet Offline and its data Stale. Resume (replay) brings it back Online.</li>
+      <li><strong>Switch account</strong> above to try another role. Technicians decide maintenance requests; administrators manage accounts, cabinets, modes and the storage-failure demonstration.</li>
+    </ol>
+    <p class="hint demo-timers">Current timers: Offline after <strong>{{ demo_policy.offline_timeout_s|round(1) }} s</strong> of silence; alarm escalation after <strong>{{ demo_policy.escalation_after_s|round(1) }} s</strong>; threshold acknowledgement limit <strong>{{ demo_policy.threshold_ack_timeout_s|round(1) }} s</strong>.</p>
+  </div>
+</details>
+{% endif %}
+<p id="refresh-status" class="refresh-status" role="status">Live view &middot; updates every 2 seconds</p>
+<div class="tools">
+  {% if permits(Fn.ACK_ALARM) %}<button type="button" id="tone-toggle" aria-pressed="false">Enable alarm tone</button>
+  <span class="hint">Enable once to hear Escalated alarms (pharmacists and technicians).</span>{% endif %}
+  {% if demo %}<nav class="section-shortcuts" aria-label="Dashboard sections"><a href="#h-cabinets">Cabinets</a><a href="#h-alarms">Active alarms</a>{% if permits(Fn.DECIDE_MAINTENANCE) %}<a href="#h-req">Maintenance requests</a>{% endif %}</nav>{% endif %}
+</div>
+<div id="live" aria-live="polite" data-url="{{ url_for('dashboard_live') }}">
+{% include "_live.html" %}
+</div>
+<script src="{{ url_for('static', filename='live.js') }}"></script>
+{% endblock %}

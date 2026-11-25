@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Audit records{% endblock %}
+{% block body %}
+<h2>Audit records of one user</h2>
+<form method="get" class="row">
+  <label for="user_id">User</label>
+  <select id="user_id" name="user_id" required>
+    <option value="">Choose a user</option>
+    {% for u in users %}<option {% if u.user_id == user_id %}selected{% endif %}>{{ u.user_id }}</option>{% endfor %}
+  </select>
+  <label for="start">From</label><input id="start" name="start" type="datetime-local" value="{{ args.get('start','') }}">
+  <label for="end">To</label><input id="end" name="end" type="datetime-local" value="{{ args.get('end','') }}">
+  <button type="submit">Retrieve</button>
+</form>
+{% if error %}<p class="flash flash-error" role="alert">{{ error }}</p>{% endif %}
+{% if actions is not none %}
+<h3>Actions that changed data</h3>
+<div class="table-scroll" role="region" aria-label="User actions" tabindex="0">
+<table>
+<thead><tr><th scope="col">Time</th><th scope="col">Action</th><th scope="col">Target</th><th scope="col">Old value</th><th scope="col">New value</th></tr></thead>
+<tbody>
+{% for e in actions %}<tr><td>{{ e.ts|t }}</td><td>{{ e.kind }}</td><td>{{ e.data.target }}</td><td>{{ e.data.old }}</td><td>{{ e.data.new }}</td></tr>
+{% else %}<tr><td colspan="5">No actions in this range.</td></tr>{% endfor %}
+</tbody>
+</table>
+</div>
+<h3>Logins and refused actions</h3>
+<div class="table-scroll" role="region" aria-label="Access records" tabindex="0">
+<table>
+<thead><tr><th scope="col">Time</th><th scope="col">Record</th><th scope="col">Details</th></tr></thead>
+<tbody>
+{% for e in access %}<tr><td>{{ e.ts|t }}</td><td>{{ e.kind }}</td><td>{% for k, v in e.data.items() %}{{ k }}={{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td></tr>
+{% else %}<tr><td colspan="3">No records in this range.</td></tr>{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block body %}
+<h2>History</h2>
+<form method="get" class="row">
+  <label for="adc_id">ADC</label>
+  <select id="adc_id" name="adc_id" required>
+    <option value="">Choose an ADC</option>
+    {% for a in adc_ids %}<option value="{{ a }}" {% if a == adc_id %}selected{% endif %}>{{ a }}</option>{% endfor %}
+  </select>
+  <label for="view">Show</label>
+  <select id="view" name="view">
+    <option value="events" {% if view == 'events' %}selected{% endif %}>All recorded events</option>
+    <option value="dispensing" {% if view == 'dispensing' %}selected{% endif %}>Dispensing events</option>
+  </select>
+  <label for="start">From</label><input id="start" name="start" type="datetime-local" value="{{ args.get('start','') }}">
+  <label for="end">To</label><input id="end" name="end" type="datetime-local" value="{{ args.get('end','') }}">
+  <button type="submit">Retrieve</button>
+</form>
+<p class="hint">Empty dates mean the last 24 hours. Recorded events cannot be edited or deleted.</p>
+{% if error %}<p class="flash flash-error" role="alert">{{ error }}</p>{% endif %}
+{% if report %}
+  {% include "_report_table.html" %}
+{% elif events is not none %}
+<div class="table-scroll" role="region" aria-label="Cabinet event history" tabindex="0">
+<table>
+<caption>{{ events|length }} event(s) of {{ adc_id }}</caption>
+<thead><tr><th scope="col">Time</th><th scope="col">Kind</th><th scope="col">User</th><th scope="col">Details</th></tr></thead>
+<tbody>
+{% for e in events %}
+<tr><td>{{ e.ts|t }}</td><td>{{ e.category.value }} / {{ e.kind }}</td><td>{{ e.user_id or '-' }}</td>
+<td>{% if e.kind == 'adc_message' %}
+  {{ e.data.msg_type or 'unreadable' }} #{{ e.data.message_id }}, ADC time {{ e.data.adc_ts|t }}:
+  <strong>{{ e.data.outcome }}</strong>{% if e.data.reason %} ({{ e.data.reason }}){% endif %}
+{% else %}{% for k, v in e.data.items() %}{{ k }}={{ v }}{% if not loop.last %}; {% endif %}{% endfor %}{% endif %}</td></tr>
+{% else %}<tr><td colspan="4">No events in this range.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

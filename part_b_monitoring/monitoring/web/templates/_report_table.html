@@ -1,0 +1,12 @@
+<div class="table-scroll" role="region" aria-label="{{ report.title }}" tabindex="0">
+<table>
+<caption>{{ report.title }} (generated {{ report.generated_at|t }})</caption>
+<thead><tr>{% for c in report.columns %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
+<tbody>
+{% for row in report.rows %}
+<tr>{% for cell in row %}<td>{% if cell is number and cell > 1000000000 %}{{ cell|t }}{% else %}{{ cell }}{% endif %}</td>{% endfor %}</tr>
+{% else %}<tr><td colspan="{{ report.columns|length }}">Nothing to report.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>

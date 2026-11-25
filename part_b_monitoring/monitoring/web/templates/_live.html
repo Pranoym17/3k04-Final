@@ -1,0 +1,96 @@
+{% macro chip(state) -%}
+<span class="chip chip-{{ state|lower }}">{% if state == 'Online' %}&#9679;{% elif state == 'Reconnecting' %}&#9680;{% elif state == 'Offline' %}&#9675;{% else %}&#9650;{% endif %} {{ state }}</span>
+{%- endmacro %}
+{% macro sev(s) -%}
+<span class="sev sev-{{ s.label|lower }}">{% if s.label == 'High' %}!!!{% elif s.label == 'Medium' %}!!{% else %}!{% endif %} {{ s.label }}</span>
+{%- endmacro %}
+<div id="escalated-flag" data-escalated="{{ 'yes' if escalated else 'no' }}" hidden></div>
+
+<dl class="summary" aria-label="Cabinet overview">
+  <div class="metric"><dt>Registered cabinets</dt><dd>{{ rows|length }}<small>ADCs</small></dd></div>
+  <div class="metric"><dt>Online cabinets</dt><dd>{{ rows|selectattr('state', 'equalto', 'Online')|list|length }}</dd></div>
+  <div class="metric"><dt>Active alarms</dt><dd>{{ alarms|length }}</dd></div>
+  <div class="metric"><dt>Low inventory slots</dt><dd>{{ rows|sum(attribute='low') }}{% if rows|selectattr('stale')|list|length %}<small>includes Stale data</small>{% endif %}</dd></div>
+</dl>
+
+<section aria-labelledby="h-cabinets">
+<h3 id="h-cabinets">Cabinets</h3>
+<div class="table-scroll" role="region" aria-labelledby="h-cabinets" tabindex="0">
+<table>
+<caption class="sr">Every registered ADC with its connection status</caption>
+<thead><tr><th scope="col">ADC</th><th scope="col">Connection</th><th scope="col">Last valid message</th><th scope="col">Mode</th><th scope="col">Active alarms</th><th scope="col">Low slots</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  <th scope="row"><a href="{{ url_for('adc_page', adc_id=r.adc_id) }}">{{ r.adc_id }}</a></th>
+  <td>{{ chip(r.state) }}{% if r.stale %} <span class="stale">data Stale</span>{% endif %}</td>
+  <td>{{ r.last|t }}</td>
+  <td><span class="chip chip-{{ r.mode|lower }}">{% if r.mode == 'Fault' %}&#9650; {% endif %}{{ r.mode }}</span></td>
+  <td>{{ r.alarms }}</td>
+  <td>{{ r.low }}</td>
+</tr>
+{% else %}
+<tr><td colspan="6">No ADC is registered. An administrator registers cabinets under Administration.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
+
+<section aria-labelledby="h-alarms">
+<h3 id="h-alarms">Active alarms</h3>
+<div class="table-scroll" role="region" aria-labelledby="h-alarms" tabindex="0">
+<table>
+<caption class="sr">Active alarms, Escalated first</caption>
+<thead><tr><th scope="col">State</th><th scope="col">Severity</th><th scope="col">ADC</th><th scope="col">Type</th><th scope="col">ADC time</th><th scope="col">Received</th><th scope="col">Acknowledged by</th><th scope="col">Action</th></tr></thead>
+<tbody>
+{% for a in alarms %}
+<tr class="alarm-{{ a.state.value|lower }}">
+  <td><strong>{{ a.state.value }}</strong>{% if a.state.value == 'Escalated' %} (unacknowledged){% endif %}</td>
+  <td>{{ sev(a.severity) }}</td>
+  <td>{{ a.adc_id }}</td>
+  <td>{{ a.alarm_type }} <span class="hint">({{ a.alarm_id }})</span>{% if a.origin.value != 'ADC' %} <span class="hint">(raised by the Monitoring System)</span>{% endif %}</td>
+  <td>{{ a.adc_ts|t }}</td>
+  <td>{{ a.receive_ts|t }}</td>
+  <td>{{ a.acknowledged_by or '-' }}</td>
+  <td>
+    {% if permits(Fn.ACK_ALARM) %}
+    <form method="post" action="{{ url_for('ack_alarm') }}">
+      <input type="hidden" name="key" value="{{ a.key }}">
+      <button type="submit" aria-label="Acknowledge alarm {{ a.alarm_id }} on {{ a.adc_id }}">Acknowledge</button>
+    </form>
+    {% else %}-{% endif %}
+  </td>
+</tr>
+{% else %}
+<tr><td colspan="8">No active alarms.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
+
+{% if permits(Fn.DECIDE_MAINTENANCE) %}
+<section aria-labelledby="h-req">
+<h3 id="h-req">Maintenance requests</h3>
+<div class="table-scroll" role="region" aria-labelledby="h-req" tabindex="0">
+<table>
+<thead><tr><th scope="col">ADC</th><th scope="col">Request</th><th scope="col">Received</th><th scope="col">Decision (first technician wins; 5 minutes, then Reject)</th></tr></thead>
+<tbody>
+{% for r in pending %}
+<tr><td>{{ r.adc_id }}</td><td>{{ r.request_id }}</td><td>{{ r.received_at|t }}</td>
+<td>
+  <form method="post" action="{{ url_for('decide') }}" class="inline">
+    <input type="hidden" name="key" value="{{ r.key }}">
+    <button type="submit" name="decision" value="accept">Accept</button>
+    <button type="submit" name="decision" value="reject">Reject</button>
+  </form>
+</td></tr>
+{% else %}
+<tr><td colspan="4">No maintenance request is waiting.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
+{% endif %}

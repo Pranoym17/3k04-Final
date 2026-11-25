@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<title>{% block title %}Monitoring System{% endblock %} | Hospital Monitoring System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+{% block head %}{% endblock %}
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="{{ url_for('static', filename='main.js') }}" defer></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% block background %}{% endblock %}
+<a class="skip" href="#main">Skip to main content</a>
+<header class="site-header">
+  <a class="brand" href="{{ url_for('index') }}" aria-label="Hospital Monitoring System home">
+    <span class="brand-mark"><img src="{{ url_for('static', filename='logo.svg') }}" width="52" height="52" alt=""></span>
+    <h1 class="brand-name">Hospital Monitoring<span class="sr"> System</span><small>Cabinet supervision</small></h1>
+  </a>
+  {% if me %}
+  <button class="menu-toggle" type="button" aria-label="Open navigation" aria-controls="main-nav" aria-expanded="false"><span aria-hidden="true"></span></button>
+  <nav class="main-nav" id="main-nav" aria-label="Main">
+    {% for endpoint, label, active, allowed in [
+      ('dashboard', 'Dashboard', request.endpoint in ['dashboard', 'adc_page'], permits(Fn.VIEW_DASHBOARD)),
+      ('history', 'History', request.endpoint == 'history', permits(Fn.VIEW_HISTORY)),
+      ('reports_index', 'Reports', request.endpoint in ['reports_index', 'report_inventory', 'report_alarms', 'report_availability'], permits(Fn.RUN_INVENTORY_REPORT) or permits(Fn.RUN_ALARM_AVAIL_REPORTS)),
+      ('admin', 'Administration', request.endpoint == 'admin', permits(Fn.ADMIN)),
+      ('admin_audit', 'Audit', request.endpoint == 'admin_audit', permits(Fn.ADMIN))
+    ] %}
+    {% if allowed %}<a href="{{ url_for(endpoint) }}"{% if active %} aria-current="page"{% endif %}>{{ label }}</a>{% endif %}
+    {% endfor %}
+  </nav>
+  <form class="who" method="post" action="{{ url_for('logout') }}">
+    <span>{{ me.user_id }} &middot; {{ me.role.value }}</span>
+    <button type="submit">{{ 'Switch account' if demo else 'Log out' }}</button>
+  </form>
+  {% else %}
+  <span class="header-meta">Part B &nbsp;/&nbsp; Sub Team 29</span>
+  {% endif %}
+</header>
+<div id="mode-banner" class="banner banner-{{ sys_mode|lower }}" role="alert"{% if not banner %} hidden{% endif %}>{% if banner %}<strong>{{ sys_mode|upper }} MODE.</strong> {{ banner }}{% endif %}</div>
+<main id="main" tabindex="-1">
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% for cat, m in msgs %}<p class="flash flash-{{ cat }}" role="status">{{ m }}</p>{% endfor %}
+{% endwith %}
+{% block body %}{% endblock %}
+</main>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ adc_id }}{% endblock %}
+{% block body %}
+<h2>{{ adc_id }}</h2>
+<p><a href="{{ url_for('dashboard') }}">&larr; Back to dashboard</a></p>
+<p>Connection: <span class="chip chip-{{ snap.state.value|lower }}">{{ snap.state.value }}</span>
+{% if snap.stale %}<strong class="stale">All values below are Stale (the cabinet is {{ snap.state.value }}).</strong>{% endif %}
+Mode: <span class="chip chip-{{ snap.adc_mode.value|lower if snap.adc_mode else 'unknown' }}">{{ snap.adc_mode.value if snap.adc_mode else 'unknown' }}</span>.
+Last valid message: {{ snap.last_valid_receive|t }}.</p>
+{% if report %}
+<p>Quantities come from the report with ADC time {{ report[0]|t }} (received {{ report[1]|t }}).</p>
+{% else %}
+<p>No inventory report has been received from this cabinet yet.</p>
+{% endif %}
+<div class="table-scroll" role="region" aria-label="Medication inventory" tabindex="0">
+<table>
+<caption class="sr">Medication slots of {{ adc_id }}</caption>
+<thead><tr><th scope="col">Slot</th><th scope="col">Medication</th><th scope="col">Quantity</th><th scope="col">Reorder threshold (confirmed)</th><th scope="col">Flag</th><th scope="col">Reported at (ADC time)</th><th scope="col">Last change request</th></tr></thead>
+<tbody>
+{% for s in slots %}
+<tr>
+  <th scope="row">{{ s.slot }}</th><td>{{ s.medication }}</td>
+  <td>{{ s.quantity }}{% if snap.stale %} <span class="stale">Stale</span>{% endif %}</td>
+  <td>{{ s.threshold }}</td>
+  <td>{% if s.low %}<span class="sev sev-high">&#9650; Low</span>{% else %}OK{% endif %}</td>
+  <td>{{ s.adc_ts|t }}</td>
+  <td>{% set c = latest[s.slot] %}{% if c %}{{ c.old }} &rarr; {{ c.new }}: <strong>{{ c.status }}</strong> by {{ c.requested_by }}{% else %}-{% endif %}</td>
+</tr>
+{% else %}
+<tr><td colspan="7">No slots reported.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% if permits(Fn.CHANGE_THRESHOLD) %}
+<h3>Change a reorder threshold</h3>
+<p class="hint">Allowed for pharmacists. The change goes only to {{ adc_id }}, shows Unconfirmed until the ADC acknowledges it, and Failed after 60 seconds without an acknowledgement.</p>
+<form method="post" action="{{ url_for('threshold', adc_id=adc_id) }}" class="row">
+  <label for="slot">Slot</label><input id="slot" name="slot" type="number" min="1" max="99" required>
+  <label for="value">New threshold</label><input id="value" name="value" type="number" min="0" max="{{ demo_policy.max_threshold }}" required>
+  <button type="submit">Send change</button>
+</form>
+{% endif %}
+{% endblock %}

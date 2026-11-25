@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}{{ report.title }}{% endblock %}
+{% block body %}
+<h2>{{ report.title }}</h2>
+{% include "_report_table.html" %}
+<p><a href="{{ request.full_path.rstrip('?') }}{{ '&' if request.args else '?' }}format=csv">Download as CSV</a> &middot; <a href="{{ url_for('reports_index') }}">Back to reports</a></p>
+{% endblock %}

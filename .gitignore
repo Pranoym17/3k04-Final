@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+part_b_monitoring/data/
+.tmp/
+.coverage
+htmlcov/
+integration/runs/*.db*
+integration/runs/*.pem

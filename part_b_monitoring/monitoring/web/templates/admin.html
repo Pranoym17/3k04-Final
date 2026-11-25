@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Administration{% endblock %}
+{% block body %}
+<h2>Administration</h2>
+<section>
+<h3>Cabinets (ADCs)</h3>
+<div class="table-scroll" role="region" aria-label="Registered cabinets" tabindex="0">
+<table>
+<thead><tr><th scope="col">ADC</th><th scope="col">Connection</th><th scope="col">Action</th></tr></thead>
+<tbody>
+{% for a in adcs %}
+<tr><th scope="row">{{ a.adc_id }}</th><td>{{ a.state }}</td>
+<td><form method="post" action="{{ url_for('admin_deregister') }}" class="inline"><input type="hidden" name="adc_id" value="{{ a.adc_id }}"><button type="submit">Deregister</button></form></td></tr>
+{% else %}<tr><td colspan="3">No ADC is registered.</td></tr>{% endfor %}
+</tbody>
+</table>
+</div>
+<form method="post" action="{{ url_for('admin_register') }}" class="row">
+  <label for="adc_id">ADC ID</label><input id="adc_id" name="adc_id" required placeholder="ADC-04">
+  <label for="key">Key (optional)</label><input id="key" name="key" placeholder="left empty: generated">
+  <button type="submit">Register ADC</button>
+</form>
+</section>
+<section>
+<h3>Accounts</h3>
+<div class="table-scroll" role="region" aria-label="User accounts" tabindex="0">
+<table>
+<thead><tr><th scope="col">User ID</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead>
+<tbody>
+{% for u in users %}
+<tr><th scope="row">{{ u.user_id }}</th><td>{{ u.role.value }}</td><td>{{ 'Disabled' if u.disabled else 'Active' }}</td>
+<td>{% if not u.disabled %}<form method="post" action="{{ url_for('admin_disable_user') }}" class="inline"><input type="hidden" name="user_id" value="{{ u.user_id }}"><button type="submit">Disable</button></form>{% endif %}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<form method="post" action="{{ url_for('admin_create_user') }}" class="row">
+  <label for="nu">User ID</label><input id="nu" name="user_id" required>
+  <label for="nr">Role</label>
+  <select id="nr" name="role">{% for r in roles %}<option value="{{ r.name }}">{{ r.value }}</option>{% endfor %}</select>
+  <label for="np">Password (8+ characters)</label><input id="np" name="password" type="password" required>
+  <button type="submit">Create account</button>
+</form>
+</section>
+<section>
+<h3>System mode</h3>
+<p>Current mode: <strong>{{ sys_mode }}</strong>. In Maintenance mode threshold and registration changes are refused while messages are still received and recorded.</p>
+<form method="post" action="{{ url_for('admin_mode') }}" class="inline">
+  <button type="submit" name="mode" value="maintenance">Switch to Maintenance</button>
+  <button type="submit" name="mode" value="normal">Switch to Normal</button>
+</form>
+</section>
+{% if demo %}
+<section>
+<h3>Demonstration only: storage failure</h3>
+<p>Makes every History Store write fail. The system enters Fault mode; switching it off lets the next 10-second test write bring the system back.</p>
+<form method="post" action="{{ url_for('admin_demo_storage') }}" class="inline">
+  <button type="submit" name="state" value="fail">Make storage fail ({{ 'on' if storage_failing else 'off' }})</button>
+  <button type="submit" name="state" value="ok">Make storage work</button>
+</form>
+</section>
+{% endif %}
+{% endblock %}
