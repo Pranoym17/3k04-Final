@@ -1,0 +1,72 @@
+ADC ADC-01 connected to Monitoring System at https://127.0.0.1:5078
+Integration (handled by integration/run_adc.py, not by Part A)
+
+ADC Part A, Deliverable 2 demonstration
+Mode after startup: NORMAL
+
+Commands
+  logout
+  replenish <item> <drawer> <qty>
+  help / quit
+
+adc> MODE: NORMAL   LINK: ONLINE
+  drawers:
+    D1   IN_SERVICE  locked
+    D2   IN_SERVICE  locked
+    D3   IN_SERVICE  locked
+  stock:
+    INSUL-100U   drawer D3  qty 8    rev 0
+    MORPH-10MG   drawer D1  qty 12   rev 0
+    PARA-500MG   drawer D2  qty 30   rev 0
+adc> Session open for u-nurse-01 as nurse
+adc> CONFIRM DISPENSE
+  medication : MORPH-10MG
+  Confirm to unlock. Cancel to abort.
+adc> Drawer D1 unlocked. Take the medication and close the drawer.
+adc> Removal sensor now reports confirmed.
+adc> [COMPLETED] Completed
+adc>   cable connected, Monitoring System at https://127.0.0.1:5078
+    15:29:24 Monitoring System asked for inventory
+    15:29:24 MSG-00001 delivered: Acknowledged MSG-00001.
+    15:29:26 MSG-00002 delivered: Acknowledged MSG-00002.
+    15:29:26 MSG-00003 delivered: Acknowledged MSG-00003.
+adc>   Network cable pulled. The ADC keeps running; messages stay in its queue.
+adc> CONFIRM DISPENSE
+  medication : PARA-500MG
+  Confirm to unlock. Cancel to abort.
+adc> Drawer D2 unlocked. Take the medication and close the drawer.
+adc> Removal sensor now reports confirmed.
+adc> [COMPLETED] Completed
+adc>     4  MSG-00004  DISPENSE_RESULT
+    5  MSG-00005  INVENTORY_UPDATE
+adc> 
+[5 s hardware poll] LINK OFFLINE, local operation continues
+MODE: NORMAL   LINK: OFFLINE  OFFLINE, 2 message(s) stored
+  drawers:
+    D1   IN_SERVICE  locked
+    D2   IN_SERVICE  locked
+    D3   IN_SERVICE  locked
+  stock:
+    INSUL-100U   drawer D3  qty 8    rev 0
+    MORPH-10MG   drawer D1  qty 10   rev 1
+    PARA-500MG   drawer D2  qty 29   rev 1
+adc>   Network cable restored. Stored messages will be sent oldest first.
+adc> MODE: NORMAL   LINK: ONLINE
+  drawers:
+    D1   IN_SERVICE  locked
+    D2   IN_SERVICE  locked
+    D3   IN_SERVICE  locked
+  stock:
+    INSUL-100U   drawer D3  qty 8    rev 0
+    MORPH-10MG   drawer D1  qty 10   rev 1
+    PARA-500MG   drawer D2  qty 29   rev 1
+adc>   cable connected, Monitoring System at https://127.0.0.1:5078
+    15:29:24 Monitoring System asked for inventory
+    15:29:24 MSG-00001 delivered: Acknowledged MSG-00001.
+    15:29:26 MSG-00002 delivered: Acknowledged MSG-00002.
+    15:29:26 MSG-00003 delivered: Acknowledged MSG-00003.
+    15:29:46 MSG-00004 delivered: Acknowledged MSG-00004.
+    15:29:46 MSG-00005 delivered: Acknowledged MSG-00005.
+    15:29:46 Monitoring System asked for inventory
+adc> Monitoring System on https://127.0.0.1:5078 (time scale 3); accounts admin1, pharm1, nurse1, tech1 / 12345
+Monitoring System stopped.

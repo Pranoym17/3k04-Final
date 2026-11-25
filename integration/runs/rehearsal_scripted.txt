@@ -1,0 +1,70 @@
+Monitoring System on https://127.0.0.1:5079 (time scale 3); accounts admin1, pharm1, nurse1, tech1 / 12345
+ADC mode after startup: NORMAL
+
+=== Scenario 1, end to end
+  ADC: MODE: NORMAL   LINK: ONLINE
+  ADC: CONFIRM DISPENSE
+  ADC: Drawer D1 unlocked. Take the medication and close the drawer.
+  ADC: [COMPLETED] Completed
+  ADC: lock feedback on D2 jammed
+  ADC: LOCK_MISMATCH on D2 held 3 s, entering FAULT
+  ADC: Mode is now NORMAL.
+
+--- Part B History for ADC-01: scenario 1
+  #8    user_action adc_registered         {"new": "registered", "old": "unregistered", "target": "ADC-01"}
+  #9    system   alarm_change           {"adc_ts": null, "alarm_id": "MS-00001", "alarm_key": "ADC-01/MS-00001", "alarm_type": "communication", "from"
+  #10   system   connection_change      {"from": "Unregistered", "reason": "registered: enter_offline", "to": "Offline"}
+  #17   message status        Accepted   {'mode': 'Normal'}
+  #18   system   connection_change      {"from": "Offline", "reason": "valid message: start_reconnect", "to": "Reconnecting"}
+  #19   message inventory     Accepted   {'slots': [{'medication': 'MORPH-10MG', 'quantity': 12, 'slot': 1}, {'medication': 'PARA-500MG', 'quantity': 30, 'slot': 2}, {'medication': 'INSUL-100U', 'quantity': 8, 'slot': 3}]}
+  #20   system   alarm_change           {"adc_ts": null, "alarm_id": "MS-00001", "alarm_key": "ADC-01/MS-00001", "alarm_type": "communication", "from"
+  #21   system   connection_change      {"from": "Reconnecting", "reason": "valid message: go_online", "to": "Online"}
+  #22   message status        Accepted   {'mode': 'Normal'}
+  #23   message inventory     Accepted   {'slots': [{'medication': 'MORPH-10MG', 'quantity': 12, 'slot': 1}, {'medication': 'PARA-500MG', 'quantity': 30, 'slot': 2}, {'medication': 'INSUL-100U', 'quantity': 8, 'slot': 3}]}
+  #24   message dispensing    Accepted   {'adc_user_id': 'u-nurse-01', 'medication': 'MORPH-10MG', 'quantity': 2, 'slot': 1}
+  #25   message inventory     Accepted   {'slots': [{'medication': 'MORPH-10MG', 'quantity': 10, 'slot': 1}, {'medication': 'PARA-500MG', 'quantity': 30, 'slot': 2}, {'medication': 'INSUL-100U', 'quantity': 8, 'slot': 3}]}
+  #26   message alarm_notice  Accepted   {'alarm_id': 'MSG-00004', 'alarm_type': 'LOCK_MISMATCH', 'severity': 'HIGH'}
+  #27   system   alarm_change           {"adc_ts": 1795639001.304, "alarm_id": "MSG-00004", "alarm_key": "ADC-01/MSG-00004", "alarm_type": "LOCK_MISMA
+  #28   message status        Accepted   {'mode': 'Fault'}
+  #29   system   alarm_change           {"adc_ts": null, "alarm_id": "MS-00004", "alarm_key": "ADC-01/MS-00004", "alarm_type": "fault", "from": null, 
+  #30   message status        Accepted   {'mode': 'Fault'}
+  #31   message status        Accepted   {'mode': 'Normal'}
+  #32   system   alarm_change           {"adc_ts": null, "alarm_id": "MS-00004", "alarm_key": "ADC-01/MS-00004", "alarm_type": "fault", "from": "Raise
+  #33   message alarm_clear   Accepted   {'alarm_id': 'MSG-00004'}
+  #34   system   alarm_change           {"adc_ts": 1795639001.304, "alarm_id": "MSG-00004", "alarm_key": "ADC-01/MSG-00004", "alarm_type": "LOCK_MISMA
+  adapter thresholds held: {} | ADC queue: []
+
+=== Scenario 2, off normal: cable pulled, dispense offline, replay
+  cable pulled
+  ADC: MODE: NORMAL   LINK: OFFLINE  OFFLINE, 0 message(s) stored
+  ADC: CONFIRM DISPENSE
+  ADC: Drawer D2 unlocked. Take the medication and close the drawer.
+  ADC: [COMPLETED] Completed
+  ADC queue while offline: [(7, 'MSG-00007', 'DISPENSE_RESULT'), (8, 'MSG-00008', 'INVENTORY_UPDATE')]
+  cable restored
+  ADC: MODE: NORMAL   LINK: ONLINE
+
+--- Part B History for ADC-01: scenario 2
+  #35   system   alarm_change           {"adc_ts": null, "alarm_id": "MS-00005", "alarm_key": "ADC-01/MS-00005", "alarm_type": "communication", "from"
+  #36   system   connection_change      {"from": "Online", "reason": "timeout: go_offline", "to": "Offline"}
+  #37   message dispensing    Late      replayed after an outage {'adc_user_id': 'u-nurse-01', 'medication': 'PARA-500MG', 'quantity': 3, 'slot': 2}
+  #38   message inventory     Late      replayed after an outage {'slots': [{'medication': 'MORPH-10MG', 'quantity': 10, 'slot': 1}, {'medication': 'PARA-500MG', 'quantity': 27, 'slot': 2}, {'medication': 'INSUL-100U', 'quantity': 8, 'slot': 3}]}
+  #39   system   ignored_event          {"event": "inventory report", "machine": "inventory", "reason": "late or older than the report already applied
+  #40   message status        Accepted   {'mode': 'Normal'}
+  #41   system   connection_change      {"from": "Offline", "reason": "valid message: start_reconnect", "to": "Reconnecting"}
+  #42   message inventory     Accepted   {'slots': [{'medication': 'MORPH-10MG', 'quantity': 10, 'slot': 1}, {'medication': 'PARA-500MG', 'quantity': 27, 'slot': 2}, {'medication': 'INSUL-100U', 'quantity': 8, 'slot': 3}]}
+  #43   system   alarm_change           {"adc_ts": null, "alarm_id": "MS-00005", "alarm_key": "ADC-01/MS-00005", "alarm_type": "communication", "from"
+  #44   system   connection_change      {"from": "Reconnecting", "reason": "valid message: go_online", "to": "Online"}
+
+Adapter log (last 12):
+   15:36:38 Monitoring System asked for inventory
+   15:36:38 MSG-00001 delivered: Acknowledged MSG-00001.
+   15:36:40 MSG-00002 delivered: Acknowledged MSG-00002.
+   15:36:40 MSG-00003 delivered: Acknowledged MSG-00003.
+   15:36:41 MSG-00004 delivered: Acknowledged MSG-00004.
+   15:36:41 MSG-00005 delivered: Acknowledged MSG-00005.
+   15:36:42 MSG-00006 delivered: Acknowledged MSG-00006.
+   15:37:12 MSG-00007 delivered: Acknowledged MSG-00007.
+   15:37:12 MSG-00008 delivered: Acknowledged MSG-00008.
+   15:37:12 Monitoring System asked for inventory
+Monitoring System stopped.

@@ -432,6 +432,13 @@ class AdcApplication:
     def pending_messages(self):
         return self._queue.describe_pending()
 
+    # Deliverable 3 integration. Returns the waiting messages in wire form,
+    # oldest first, so a transport can carry them. Read only: nothing is
+    # removed until an ACK arrives through monitor_response.
+    def pending_wire(self):
+        return [(e.msg_id, self._codec.encode(e.msg_id, e.kind, e.payload))
+                for e in self._queue.pending()]
+
     # ================= invariants =================
 
     # Called by the Mode Manager whenever the mode changes, so it gets logged and announced.

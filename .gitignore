@@ -6,3 +6,5 @@ part_b_monitoring/data/
 htmlcov/
 integration/runs/*.db*
 integration/runs/*.pem
+integration/runs/*.log
+integration/runs/*.json
